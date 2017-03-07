@@ -10,15 +10,16 @@ import requests
 from bs4 import BeautifulSoup
 import re
 import sys
-import urllib
+#import urllib
+from urllib import pathname2url
 import time
 import os
-gi.require_version('Notify', '0.7')
-from gi.repository import Notify
+#gi.require_version('Notify', '0.7')
+#from gi.repository import Notify
 
 def getsong(name, remaining):
 	filename = '/home/dipanshu/Downloads/' + name + ".mp3"
-	url = r'https://www.youtube.com/results?search_query=' + urllib.parse.quote(name + 'song official music')
+	url = r'https://www.youtube.com/results?search_query=' + pathname2url(name + 'song official music')
 	r = requests.get(url)
 	r_html = r.text
 	
@@ -27,9 +28,9 @@ def getsong(name, remaining):
 	line = soup.find('', class_='yt-lockup-title')
 	m = re.search(r'href=".*"', str(line))
 	if m:
-		item = r"http://www.youtubeinmp3.com/download/?video=" + urllib.parse.quote(r"https://youtube.com" + m.group(0)[:].split('\"')[1])
+		item = r"http://www.youtubeinmp3.com/download/?video=" + pathname2url(r"https://youtube.com" + m.group(0)[:].split('\"')[1])
 		r = requests.get(item)
-		m = re.search(r'/download/get/\?i=.*"><i', str(r.text))
+		m = re.search(r'/download/get/\?i=.*"><i', str(r.text.encode('utf-8')))
 		if m:
 			item = m.group(0)[:-4]
 			r = requests.get(r"http://youtubeinmp3.com" + item)
@@ -44,10 +45,21 @@ def getsong(name, remaining):
 
 if __name__ == "__main__":
 	print("\n\nAutomatic Song Downloader\n")
-	Notify.init("Song Downloader")
-	i=1	
-	while i < len(sys.argv):
-		print(str(i)+": Downloading '"+sys.argv[i]+"\'")
-		getsong(sys.argv[i], len(sys.argv)-i)
-		i=i+1
-	Notify.Notification.new("MP3 Downloads finished.").show()
+#	Notify.init("Song Downloader")
+	songsList = []
+	if sys.argv[1] == '-f':
+		i=0
+		with open(sys.argv[2]) as listFile:
+			for song in listFile:
+				songsList.append(song)
+		while i < len(songsList):
+			print(str(i+1)+": Downloading '"+songsList[i].replace('\n','')+"\'")
+			getsong(songsList[i], len(songsList)-i)
+			i=i+1
+	else:
+		i=1
+		while i < len(sys.argv):
+			print(str(i)+": Downloading '"+sys.argv[i]+"\'")
+			getsong(sys.argv[i], len(sys.argv)-i)
+			i=i+1
+#	Notify.Notification.new("MP3 Downloads finished.").show()
